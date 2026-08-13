@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NYC Airbnb Room Type Predictor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Syne:wght@500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="page-shell">
+    <div class="ambient ambient-one" aria-hidden="true"></div>
+    <div class="ambient ambient-two" aria-hidden="true"></div>
+
+    <main class="layout">
+      <section class="hero-panel">
+        <p class="kicker">NYC Airbnb Intelligence</p>
+        <h1>Predict the kind of stay a listing is really selling.</h1>
+        <p class="hero-copy">
+          Use your model through a sharper interface. Enter listing signals, test realistic examples,
+          and compare the model's confidence across room types in one screen.
+        </p>
+
+        <div class="hero-metrics">
+          <article class="metric-card">
+            <span class="metric-label">Focus</span>
+            <strong>Room type classification</strong>
+          </article>
+          <article class="metric-card">
+            <span class="metric-label">Inputs</span>
+            <strong>10 listing features</strong>
+          </article>
+          <article class="metric-card status-card" id="apiStatusCard">
+            <span class="metric-label">API status</span>
+            <strong id="apiStatusText">Checking connection...</strong>
+          </article>
+        </div>
+
+        <div class="insight-card">
+          <div class="insight-copy">
+            <span class="insight-label">What this helps with</span>
+            <p>Spot whether a listing behaves like an entire home, a private room, or a shared room before deeper analysis.</p>
+          </div>
+          <button type="button" class="secondary-btn" id="exampleBtn">Load sample listing</button>
+        </div>
+      </section>
+
+      <section class="workspace">
+        <section class="panel form-panel">
+          <div class="panel-top">
+            <div>
+              <p class="panel-label">Input</p>
+              <h2>Listing profile</h2>
+            </div>
+            <p class="panel-note">Every field maps to the FastAPI prediction payload.</p>
+          </div>
+
+          <form id="predictForm" novalidate>
+            <div class="form-grid">
+              <label class="field field-span-2">
+                <span>Neighbourhood</span>
+                <input type="text" id="neighbourhood" name="neighbourhood" placeholder="Williamsburg" required>
+              </label>
+
+              <label class="field">
+                <span>Borough</span>
+                <select id="neighbourhood_group" name="neighbourhood_group" required>
+                  <option value="" disabled selected>Select borough</option>
+                  <option value="Manhattan">Manhattan</option>
+                  <option value="Brooklyn">Brooklyn</option>
+                  <option value="Queens">Queens</option>
+                  <option value="Bronx">Bronx</option>
+                  <option value="Staten Island">Staten Island</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>Price per night</span>
+                <input type="number" id="price" name="price" min="1" step="1" placeholder="150" required>
+              </label>
+
+              <label class="field">
+                <span>Latitude</span>
+                <input type="number" id="latitude" name="latitude" min="-90" max="90" step="0.000001" placeholder="40.7128" required>
+              </label>
+
+              <label class="field">
+                <span>Longitude</span>
+                <input type="number" id="longitude" name="longitude" min="-180" max="180" step="0.000001" placeholder="-74.0060" required>
+              </label>
+
+              <label class="field">
+                <span>Minimum nights</span>
+                <input type="number" id="minimum_nights" name="minimum_nights" min="1" max="365" step="1" placeholder="3" required>
+              </label>
+
+              <label class="field">
+                <span>Total reviews</span>
+                <input type="number" id="number_of_reviews" name="number_of_reviews" min="0" step="1" placeholder="24" required>
+              </label>
+
+              <label class="field">
+                <span>Reviews per month</span>
+                <input type="number" id="reviews_per_month" name="reviews_per_month" min="0" step="0.01" placeholder="1.20" required>
+              </label>
+
+              <label class="field">
+                <span>Host listings count</span>
+                <input type="number" id="calculated_host_listings_count" name="calculated_host_listings_count" min="0" step="1" placeholder="1" required>
+              </label>
+
+              <label class="field field-span-2">
+                <span>Availability across the year</span>
+                <input type="range" id="availability_365" name="availability_365" min="0" max="365" step="1" value="180" required>
+                <div class="range-meta">
+                  <strong id="availabilityValue">180</strong>
+                  <span>days available</span>
+                </div>
+              </label>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="primary-btn" id="predictBtn">
+                <span class="btn-label">Run prediction</span>
+                <span class="btn-spinner" aria-hidden="true"></span>
+              </button>
+              <p class="form-error" id="formError" role="alert"></p>
+            </div>
+          </form>
+        </section>
+
+        <section class="panel result-panel" aria-live="polite">
+          <div class="panel-top">
+            <div>
+              <p class="panel-label">Output</p>
+              <h2>Prediction board</h2>
+            </div>
+            <p class="panel-note">Confidence is shown for all supported classes.</p>
+          </div>
+
+          <div class="result-empty" id="resultEmpty">
+            <div class="empty-mark">01</div>
+            <h3>No prediction yet</h3>
+            <p>Submit a listing profile to reveal the predicted room type and class confidence.</p>
+          </div>
+
+          <div class="result-content" id="resultContent" hidden>
+            <div class="result-hero">
+              <p class="result-label">Top prediction</p>
+              <h3 id="predictedName">-</h3>
+              <p class="result-summary" id="resultSummary">Waiting for model output.</p>
+            </div>
+
+            <div class="confidence-bars" id="probList"></div>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
