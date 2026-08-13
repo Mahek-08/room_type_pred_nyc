@@ -103,12 +103,17 @@ form.addEventListener("submit", async (event) => {
       body: JSON.stringify(collectPayload()),
     });
 
+    const body = await readResponseBody(response);
+
     if (!response.ok) {
-      const body = await response.json().catch(() => null);
       throw new Error(readApiError(body, response.status));
     }
 
-    const result = await response.json();
+    if (!body || typeof body !== "object") {
+      throw new Error("Prediction API returned an empty or invalid response.");
+    }
+
+    const result = body;
     renderResult(result);
   } catch (error) {
     formError.textContent = error.message?.includes("fetch")
@@ -135,6 +140,20 @@ function collectPayload() {
   };
 }
 
+async function readResponseBody(response) {
+  const text = await response.text();
+
+  if (!text) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
+}
+
 function readApiError(body, status) {
   if (Array.isArray(body?.detail)) {
     return body.detail.map((item) => item.msg || JSON.stringify(item)).join(" ");
@@ -142,6 +161,14 @@ function readApiError(body, status) {
 
   if (typeof body?.detail === "string") {
     return body.detail;
+  }
+
+  if (typeof body === "string" && body.trim()) {
+    return body;
+  }
+
+  if (status >= 500) {
+    return `Server error (${status}). Check the Render logs for the backend exception.`;
   }
 
   return `Request failed with status ${status}.`;
