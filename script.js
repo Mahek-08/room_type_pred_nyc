@@ -1,4 +1,4 @@
-const DEFAULT_API_BASE_URL = "https://room-type-pred-nyc.onrender.com";
+const DEFAULT_API_BASE_URL = "https://room-type-pred-nyc-1.onrender.com";
 const API_BASE_URL = window.location.protocol === "file:"
   ? DEFAULT_API_BASE_URL
   : (window.location.origin || DEFAULT_API_BASE_URL);
